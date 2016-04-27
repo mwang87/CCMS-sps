@@ -1,0 +1,88 @@
+################################################################################
+# Definitions
+################################################################################
+#
+# Contains general definitions:
+# 1) Repository structure
+# 2) Libraries and external tools names and paths
+# 3) Internal libraries names and paths
+#
+################################################################################
+# Top level general definitions
+
+ROOT := $(shell pwd)
+SPS_VERSION := $(shell git rev-list --full-history --all --abbrev-commit | wc -l | sed -e 's/^ *//')
+GIT_SH1 := $(shell git rev-parse HEAD)
+
+################################################################################
+# Repository structure
+#-------------------------------------------------------------------------------
+BIN_DIR := $(BASE_DIR)/bin
+LIB_DIR := $(BIN_DIR)/lib
+#-------------------------------------------------------------------------------
+COMMON_FILES := $(BASE_DIR)/trunk
+SRC_DIR := $(BASE_DIR)/src
+INSTALL_DIR := $(BASE_DIR)/install
+EXEC_DIR := $(COMMON_FILES)/ExecFramework
+UTILS_DIR := $(COMMON_FILES)/utils
+PEPNOVO_DIR := $(SRC_DIR)/pepnovo
+MSCLUSTER_DIR := $(SRC_DIR)/mscluster
+CLUSTAL_W_DIR := $(SRC_DIR)/Clustal_w
+GENOMS_DIR := $(SRC_DIR)/genoms
+QC_DIR := $(BASE_DIR)/qc
+QC_TOOLS := $(QC_DIR)/tools
+
+################################################################################
+# External libraries and tools paths
+#-------------------------------------------------------------------------------
+XERCES_ROOT := $(SRC_DIR)/xerces-c-3.1.1
+PDFHARU_ROOT := $(SRC_DIR)/libhpdf-2.3.0RC2
+LIBZ_ROOT := $(SRC_DIR)/zlib-1.2.7
+LIBPNG_ROOT := $(SRC_DIR)/libpng-1.2.46
+LIBGD_ROOT := $(SRC_DIR)/libgd/src
+#-------------------------------------------------------------------------------
+GNUPLOT_ROOT := $(SRC_DIR)/gnuplot-4.2.5
+PWIZ_ROOT := $(SRC_DIR)/pwiz-4922
+
+################################################################################
+# Internal libraries names and paths
+#-------------------------------------------------------------------------------
+REPORTS_DIR := $(COMMON_FILES)/reports
+REPORT_COMMON_FILES := $(REPORTS_DIR)/common
+CONTPLOT_DIR := $(REPORTS_DIR)/contplot.dir
+SPECPLOT_DIR := $(REPORTS_DIR)/specplot.dir
+REPORT_DIR := $(REPORTS_DIR)/spsReports.dir
+LIBSPSREPORTS_DIR := $(REPORT_COMMON_FILES)
+LIBSPSREPORTS_SRC := $(LIBSPSREPORTS_DIR)/libSpsReports.a
+LIBSPSREPORTS_SRC_DYNAMIC := $(LIBSPSREPORTS_DIR)/libSpsReports.so
+#-------------------------------------------------------------------------------
+METASPS_DIR := $(COMMON_FILES)/MetaSPS
+LIBCORE_DIR := $(COMMON_FILES)/libCore
+LIBCORE_SRC := $(LIBCORE_DIR)/libcore.a
+LIBCORE_SRC_DYNAMIC := $(LIBCORE_DIR)/libcore.so
+LIBSPS_DIR := $(COMMON_FILES)/libSPS
+LIBSPS_SRC := $(LIBSPS_DIR)/libsps.a
+LIBSPS_SRC_DYNAMIC := $(LIBSPS_DIR)/libsps.so
+
+################################################################################
+# External libraries files names (.zip added)
+#-------------------------------------------------------------------------------
+SRC_CLUSTAL := Clustal_w
+SRC_GENOMS := genoms
+SRC_GNUPLOT := gnuplot-4.2.5
+SRC_LIBHPDF := libhpdf-2.3.0RC2
+SRC_LIBPNG := libpng-1.2.46
+SRC_MSCLUSTER := mscluster
+SRC_PEPNOVO := pepnovo
+SRC_PWIZ := pwiz-4922
+SRC_XERCES := xerces-c-3.1.1
+SRC_ZLIB := zlib-1.2.7
+#-------------------------------------------------------------------------------
+
+################################################################################
+# Additional configuration options
+# 
+# Redirect output of make command. Comment out the following line to print make output 
+#
+# MAKE_OUTPUT := > /dev/null
+#-------------------------------------------------------------------------------

@@ -1,0 +1,7 @@
+# Ignore all
+/*
+
+# But not these files...
+!.gitignore
+!*.tar.gz
+!*.sh

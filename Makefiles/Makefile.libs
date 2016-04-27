@@ -1,0 +1,182 @@
+################################################################################
+# Compile rules - External Libraries
+################################################################################
+# In this section is the list of external libraries to be processed
+
+ExternalLibs: src_dirs xercesLibrary zLibrary libPng pdfLibrary $(PWIZ_USE) $(GENOMS_USE) # pwiz # boost # # libgd #
+
+################################################################################
+# Uncompress src directories
+################################################################################
+# This rule checks for missing uncompressed libraries and uncompresses them
+# from the .zip file with the same name
+#
+src_dirs: $(SRC_DIR)/$(SRC_PWIZ) $(SRC_DIR)/$(SRC_ZLIB) $(SRC_DIR)/$(SRC_LIBPNG) $(SRC_DIR)/$(SRC_CLUSTAL) $(SRC_DIR)/$(SRC_GENOMS) $(SRC_DIR)/$(SRC_GNUPLOT) $(SRC_DIR)/$(SRC_LIBHPDF) $(SRC_DIR)/$(SRC_MSCLUSTER) $(SRC_DIR)/$(SRC_PEPNOVO) $(SRC_DIR)/$(SRC_XERCES)
+
+$(SRC_DIR)/$(SRC_CLUSTAL):
+	cd $(SRC_DIR) ; tar -zxf $(SRC_CLUSTAL).tar.gz ; cd $(ROOT)
+
+$(SRC_DIR)/$(SRC_GENOMS):
+	cd $(SRC_DIR) ; tar -zxf $(SRC_GENOMS).tar.gz ; cd $(ROOT)
+
+$(SRC_DIR)/$(SRC_GNUPLOT):
+	cd $(SRC_DIR) ; tar -zxf $(SRC_GNUPLOT).tar.gz ; cd $(ROOT)
+
+$(SRC_DIR)/$(SRC_LIBHPDF):
+	cd $(SRC_DIR) ; tar -zxf $(SRC_LIBHPDF).tar.gz ; cd $(ROOT)
+
+$(SRC_DIR)/$(SRC_LIBPNG):
+	cd $(SRC_DIR) ; tar -zxf $(SRC_LIBPNG).tar.gz ; cd $(ROOT)
+
+$(SRC_DIR)/$(SRC_MSCLUSTER):
+	cd $(SRC_DIR) ; tar -zxf $(SRC_MSCLUSTER).tar.gz ; cd $(ROOT)
+
+$(SRC_DIR)/$(SRC_PEPNOVO):
+	cd $(SRC_DIR) ; tar -zxf $(SRC_PEPNOVO).tar.gz ; cd $(ROOT)
+
+$(SRC_DIR)/$(SRC_PWIZ):
+	cd $(SRC_DIR) ; tar -zxf $(SRC_PWIZ).tar.gz ; cd $(ROOT)
+
+$(SRC_DIR)/$(SRC_XERCES):
+	cd $(SRC_DIR) ; tar -zxf $(SRC_XERCES).tar.gz ; cd $(ROOT)
+
+$(SRC_DIR)/$(SRC_ZLIB):
+	cd $(SRC_DIR) ; tar -zxf $(SRC_ZLIB).tar.gz ; cd $(ROOT)
+
+################################################################################
+# Compile rules - Xerces library
+################################################################################
+$(XERCES_ROOT)/Makefile:
+	$(info *********************************************************)
+	$(info ******************** Building Xerces ********************)
+	$(info *********************************************************)
+	chmod +x $(XERCES_ROOT)/configure
+	chmod +x $(XERCES_ROOT)/config/pretty-make
+	#cd $(XERCES_ROOT); ./configure --disable-pretty-make --disable-network --disable-threads --without-curl --without-icu LDFLAGS="-no-undefined -static"  ; cd $(ROOT)
+	cd $(XERCES_ROOT); ./configure --disable-pretty-make --disable-network --disable-threads --without-curl --without-icu LDFLAGS="$(WIN_LDFLAGS) -static" $(MINGW_SPECIFIC_FLAGS) ; cd $(ROOT)
+
+$(XERCES_ROOT)/src/.libs/libxerces-c.a: $(XERCES_ROOT)/Makefile
+	$(MAKE) -C $(XERCES_ROOT)/src CPPFLAGS="$(CPPFLAGS)"
+
+$(PREFIX)/$(SUFFIX)/libxerces-c.a: $(XERCES_ROOT)/src/.libs/libxerces-c.a
+	cp $(XERCES_ROOT)/src/.libs/libxerces-c.a $(PREFIX)/$(SUFFIX)
+
+xercesLibrary: $(PREFIX)/$(SUFFIX)/libxerces-c.a
+
+# Linux
+ifneq (,$(findstring linux,$(shell gcc -dumpmachine)))
+$(PREFIX)/$(SUFFIX)/libxerces-c-3.1.so: $(XERCES_ROOT)/Makefile
+	$(MAKE) -C $(XERCES_ROOT)/src CPPFLAGS="$(CPPFLAGS)"
+	cp $(XERCES_ROOT)/src/.libs/libxerces-c-3.1.so $(PREFIX)/lib/libxerces-c-3.1.so
+
+# Windows Cygwin
+else
+ifneq (,$(findstring cygwin,$(shell gcc -dumpmachine)))
+#$(PREFIX)/bin/cygxerces-c-3-1.dll: $(XERCES_ROOT)/Makefile
+#	$(MAKE) -C $(XERCES_ROOT)/src LDFLAGS="$(LDFLAGS)" CPPFLAGS="$(CPPFLAGS)"
+#	cp $(XERCES_ROOT)/src/.libs/cygxerces-c-3-1.dll $(PREFIX)/bin/cygwin
+endif
+endif
+
+################################################################################
+# Compile rules - PdfHaru library
+################################################################################
+$(PDFHARU_ROOT)/Makefile:
+	$(info **********************************************************)
+	$(info ******************** Building PdfHaru ********************)
+	$(info **********************************************************)
+	cd $(PDFHARU_ROOT); LDFLAGS="-L $(realpath $(PREFIX)/$(SUFFIX))" ./configure --with-zlib=$(realpath $(LIBZ_ROOT)) --with-png=$(realpath $(LIBPNG_ROOT)) --prefix=$(realpath $(PREFIX)) --with-libdir=$(SUFFIX) $(MINGW_SPECIFIC_FLAGS); cd $(ROOT)
+
+$(PDFHARU_ROOT)/src/.libs/libhpdf.a: $(PDFHARU_ROOT)/Makefile
+	$(MAKE) -C $(PDFHARU_ROOT) LDFLAGS="-L$(realpath $(PREFIX)/$(SUFFIX))" CPPFLAGS="-I$(realpath $(LIBPNG_ROOT)) -I$(realpath $(LIBZ_ROOT))"
+
+$(PREFIX)/$(SUFFIX)/libhpdf.a: $(PDFHARU_ROOT)/src/.libs/libhpdf.a
+	cp $(PDFHARU_ROOT)/src/.libs/libhpdf.a $(PREFIX)/$(SUFFIX)
+
+pdfLibrary: $(PREFIX)/$(SUFFIX)/libhpdf.a
+
+################################################################################
+# Compile rules - zlib
+################################################################################
+$(PREFIX)/$(SUFFIX)/libz.a:
+	$(info ************************************************************)
+	$(info ******************** Building z library ********************)
+	$(info ************************************************************)
+	cd $(LIBZ_ROOT); CFLAGS="-fPIC" ./configure --static ; cd $(ROOT)
+	$(MAKE) -C $(LIBZ_ROOT)
+	cp $(LIBZ_ROOT)/libz.a $(PREFIX)/$(SUFFIX)
+
+zLibrary: $(PREFIX)/$(SUFFIX)/libz.a
+
+################################################################################
+# Compile rules - libPNG
+################################################################################
+$(PREFIX)/$(SUFFIX)/libpng.a:
+	$(info **************************************************************)
+	$(info ******************** Building PNG Library ********************)
+	$(info **************************************************************)
+	cd $(LIBPNG_ROOT); LDFLAGS="-L$(realpath $(PREFIX)/$(SUFFIX))" CFLAGS="-fPIC" ./configure --prefix=$(realpath $(PREFIX)/$(SUFFIX)) --disable-shared ; cd $(ROOT)
+	$(MAKE) -C $(LIBPNG_ROOT) CPPFLAGS="-I$(realpath $(LIBZ_ROOT))" LDFLAGS="-L$(realpath $(PREFIX)/$(SUFFIX))"
+	cp $(LIBPNG_ROOT)/.libs/libpng12.a $(PREFIX)/$(SUFFIX)/libpng.a
+
+libPng: $(PREFIX)/$(SUFFIX)/libpng.a
+
+################################################################################
+# Compile rules - libgd
+################################################################################
+$(LIBGD_ROOT)/configure:
+	ln -s -f ../config config ;ln -s -f ../test test
+	cd $(LIBGD_ROOT) ; sh bootstrap.sh ; autoreconf -fvi ; cd $(ROOT)
+
+$(LIBGD_ROOT)/Makefile: #$(LIBGD_ROOT)/configure
+	$(info *************************************************************)
+	$(info ******************** Building GD Library ********************)
+	$(info *************************************************************)
+	cd $(LIBGD_ROOT); LDFLAGS="-L$(realpath $(PREFIX)/$(SUFFIX)) -static" CFLAGS="-fPIC" ./configure --prefix=$(realpath $(PREFIX)/$(SUFFIX)) --disable-shared  --with-png=$(realpath $(LIBPNG_ROOT)) $(MINGW_SPECIFIC_FLAGS) ; cd $(ROOT)
+
+$(PREFIX)/$(SUFFIX)/libgd.a: $(LIBGD_ROOT)/Makefile
+	$(MAKE) -C $(LIBGD_ROOT) CPPFLAGS="-I$(realpath $(LIBZ_ROOT))" LDFLAGS="-L$(realpath $(PREFIX)/$(SUFFIX))"
+	cp $(LIBGD_ROOT)/.libs/libgd.a $(PREFIX)/$(SUFFIX)/libgd.a
+
+libgd: $(PREFIX)/$(SUFFIX)/libgd.a
+
+################################################################################
+# Compile rules - GenoMS
+################################################################################
+$(BIN_DIR)/DBs_GenoMS:
+	mkdir $(BIN_DIR)/DBs_GenoMS
+	@cp $(GENOMS_DIR)/DBs_GenoMS/* $(BIN_DIR)/DBs_GenoMS/
+
+GenoMS: $(BIN_DIR)/DBs_GenoMS
+	$(info **********************************************************)
+	$(info ******************** Including GenoMS ********************)
+	$(info **********************************************************)
+	@cp -r -f $(GENOMS_DIR)/GenoMS.jar $(BIN_DIR)
+	@cp -r -f $(GENOMS_DIR)/MSGFDB.jar $(BIN_DIR)	
+	# rsync -aq --exclude=*/.svn* $(GENOMS_DIR)/DBs_GenoMS $(BIN_DIR)
+
+################################################################################
+# Compile rules - Boost
+################################################################################
+ZLIB_SOURCE=$(realpath $(LIBZ_ROOT))
+export ZLIB_SOURCE
+
+$(BOOST_ROOT)/b2:
+	cd $(BOOST_ROOT); ./bootstrap.sh --without-libraries=python ZLIB_SOURCE="$(realpath $(LIBZ_ROOT))" LDFLAGS="$(WIN_LDFLAGS) $(LDFLAGS) $(MINGW_SPECIFIC_FLAGS)" CPPFLAGS="$(CPPFLAGS)" ; cd $(ROOT)
+	cd $(BOOST_ROOT); ./b2 ; cd $(ROOT)
+
+boost: $(BOOST_ROOT)/b2
+
+################################################################################
+# pwiz with bjam
+################################################################################
+$(PWIZ_ROOT)/libraries/boost_1_43_0/boost/foreach.hpp:
+	$(info ***************************************************************)
+	$(info ******************** Building ProteoWizard ********************)
+	$(info ***************************************************************)
+	cd $(PWIZ_ROOT); ./quickbuild.sh $(PWIZ_OPTIONS) ; find . -name "lib*.a" | xargs -i cp -f {} $(ROOT)/$(PREFIX)/$(SUFFIX) ; cd $(ROOT)
+
+pwiz: $(PWIZ_ROOT)/libraries/boost_1_43_0/boost/foreach.hpp
+
+# 	cd $(PWIZ_ROOT); find . -name "lib*.a" | xargs -i mv {} $(ROOT)/$(PREFIX)/$(SUFFIX) ; cd $(ROOT)
+################################################################################

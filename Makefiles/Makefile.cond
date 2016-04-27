@@ -1,0 +1,340 @@
+################################################################################
+# Conditions
+################################################################################
+# 
+# Contains the conditional variants and variable settings, based on the input 
+# provided by the user to the Makefile. The compilation may be targeted to a 
+# specific platform, may be a debug or a static build. 
+# The options are summarized below. 
+# This section also contains the definitions of the build tools (g++ and cc), 
+# the libraries used in each compile option, and the build (linker and compiler) 
+# options.
+#
+# This section is also responsible for identifying the current architecture 
+# (windows or linux, 64 or 32 bits), and automatically adjusts libraries to be 
+# used and compilation options accordingly. 
+# However, the user may want to cross compile for mingw32 or 64, if he is 
+# currently building under CygWin.
+# 
+################################################################################
+
+################################################################################
+# The following section defines the compile tools to be used, as well as the ar
+# ranlib and strip commands. Note that the reason these are defined here is
+# because they are changed depending on the platform the project is being built
+# under.
+
+CC := gcc
+CXX := g++
+
+AR := ar
+RANLIB := ranlib
+
+STRIP := strip
+
+################################################################################
+# The following section acquires the compile(s) versions and forms a major/minor
+# ID, to be used to identify some files built by the bjam tool 
+
+CC_VERSION_MAJOR = $(shell expr `$(CC) -dumpversion | cut -f1 -d.`)
+CC_VERSION_MINOR = $(shell expr `$(CC) -dumpversion | cut -f2 -d.`)
+CC_VERSION = $(CC_VERSION_MAJOR)$(CC_VERSION_MINOR)
+
+CXX_VERSION_MAJOR = $(shell expr `$(CXX) -dumpversion | cut -f1 -d.`)
+CXX_VERSION_MINOR = $(shell expr `$(CXX) -dumpversion | cut -f2 -d.`)
+CXX_VERSION = $(CXX_VERSION_MAJOR)$(CXX_VERSION_MINOR)
+
+PLATFORM := 
+ARCH := 
+
+################################################################################
+# The following section defines the C++ compile flags. Here are defined the paths to
+#
+# INCLUDE 
+#
+
+CPPFLAGS := -DGIT_SH1=$(GIT_SH1) -DSPS_VERSION=$(SPS_VERSION) -I. -I$(COMMON_FILES) -I$(EXEC_DIR) -I$(REPORT_COMMON_FILES) -I$(LIBZ_ROOT) -I$(PDFHARU_ROOT)/include -I$(XERCES_ROOT)/src -I$(CONTPLOT_DIR) -I$(SPECPLOT_DIR) -I$(REPORT_DIR) -I$(METASPS_DIR) -I$(LIBCORE_DIR) -I$(LIBSPS_DIR) -I$(PWIZ_ROOT) -I$(PWIZ_ROOT)/libraries/boost_1_43_0 -fopenmp
+
+################################################################################
+# The following section defines the C++ compile flags. Here are defined the paths to
+#
+# LIBRARIES
+#
+
+LDFLAGS := -L$(LIBSPSREPORTS_DIR) -L$(LIBSPS_DIR) -L$(LIBCORE_DIR) -L$(COMMON_FILES)
+
+################################################################################
+# The following section defines the PROTEOWIZARD libraries names, both under 
+# linux and windows. Note that the CC_VERSION variable is used to concatenate some
+# of the library file names. These were generateb by the pwiz build process, and
+# we need to use them accordingly.
+
+PWIZ_LIBS := -lpwiz_data_vendor_readers -lpwiz_reader_waters -lpwiz_reader_agilent -lpwiz_reader_bruker -lpwiz_reader_thermo -lpwiz_reader_abi -lpwiz_reader_abi_t2d -lpwiz_data_msdata -lpwiz_utility_minimxml -lpwiz_utility_misc -lpwiz_data_identdata -lpwiz_data_identdata_version -lpwiz_utility_chemistry -lpwiz_data_proteome -lpwiz_data_common -lpwiz_data_msdata_mz5 -lhdf5pp -lhdf5 -lpwiz_data_msdata_version -lpwiz_version -lSHA1 -lboost_date_time-gcc$(CC_VERSION)-mt-s -lboost_serialization-gcc$(CC_VERSION)-mt-s -lboost_regex-gcc$(CC_VERSION)-mt-s -lboost_iostreams-gcc$(CC_VERSION)-mt-s -lboost_filesystem-gcc$(CC_VERSION)-mt-s -lboost_program_options-gcc$(CC_VERSION)-mt-s -lz-gcc$(CC_VERSION)-mt-s-1_2 -lboost_system-gcc$(CC_VERSION)-mt-s -lboost_thread-gcc$(CC_VERSION)-mt-s 
+
+PWIZ_LIBS_WINDOWS := -lpwiz_data_vendor_readers -lpwiz_reader_waters -lpwiz_reader_agilent -lpwiz_reader_bruker -lpwiz_reader_thermo -lpwiz_reader_abi -lpwiz_reader_abi_t2d -lpwiz_data_msdata -lpwiz_utility_minimxml -lpwiz_utility_misc -lpwiz_data_identdata -lpwiz_data_identdata_version -lpwiz_utility_chemistry -lpwiz_data_proteome -lpwiz_data_common -lpwiz_data_msdata_version -lpwiz_version -lSHA1 -lboost_date_time-gcc$(CC_VERSION)-mt-s -lboost_serialization-gcc$(CC_VERSION)-mt-s -lboost_regex-gcc$(CC_VERSION)-mt-s -lboost_iostreams-gcc$(CC_VERSION)-mt-s -lboost_filesystem-gcc$(CC_VERSION)-mt-s -lboost_program_options-gcc$(CC_VERSION)-mt-s -lz-gcc$(CC_VERSION)-mt-s-1_2 -lboost_system-gcc$(CC_VERSION)-mt-s -lboost_thread-gcc$(CC_VERSION)-mt-s 
+
+################################################################################
+# The following section defines specific options needed for linking with pwiz
+# As linking under linux and windows requires different sets of options, we must 
+# create a variable for them
+
+PWIZ_OPTIONS :=
+
+################################################################################
+# The following section defines the variable to specify if pwiz is to be included
+# This variable must be passed into the compile process as conditional compilation
+# must take place in order for the C++ code know if the libs are going to be 
+# present or not
+
+INCLUDE_PWIZ := 1
+
+PWIZ_USE := pwiz
+
+################################################################################
+# The following section defines the variable to specify if GenoMS is to be included
+# This variable must be passed into the compile process as conditional compilation
+# must take place in order for the C++ code know if the external executable is
+# going to be present or not
+
+INCLUDE_GENOMS := 0
+
+GENOMS_USE := 
+
+################################################################################
+# The following section defines variables to hold specific compile and link
+# flags that are added for windows and/or MinGW
+
+WIN_LDFLAGS := 
+MINGW_SPECIFIC_FLAGS :=
+
+################################################################################
+# The following section defines compile flags for debug or production final 
+# results.
+#-------------------------------------------------------------------------------
+#type=debug
+ifeq ($(type),debug)
+  CPPFLAGS += -O0 -g
+else
+  CPPFLAGS += -O3 -ffunction-sections -fdata-sections -Wno-deprecated -Wno-write-strings
+endif
+
+################################################################################
+# The following section defines compile flags for 32 bits final 
+# results.
+#-------------------------------------------------------------------------------
+# 'make type=32'
+ifeq ($(type),32)
+  # Linux
+  ifneq (,$(findstring linux,$(shell gcc -dumpmachine)))
+  	PREFIX := $(INSTALL_DIR)/linux-g++
+  	LDFLAGS += -march=i686 -m32
+  	CPPFLAGS += -march=i686 -m32
+		ARCH := x86
+  else
+  	PREFIX := $(INSTALL_DIR)/win32-g++
+  	LDFLAGS += -m32
+  	CPPFLAGS += -m32
+		ARCH := x64
+  endif
+endif
+
+  # gcc 4
+ifeq ($(shell gcc -dumpversion | cut -d. -f 1), 4)
+  LDFLAGS += -Wl,--gc-sections
+endif
+
+################################################################################
+# The following section defines compile flags for static linkage  final 
+# results.
+#-------------------------------------------------------------------------------
+# 'make build=static'
+ifeq ($(build),static)
+  LDFLAGS += -static -pthread
+endif
+
+################################################################################
+# The following section defines compile flags for specific compiler versions
+#-------------------------------------------------------------------------------
+# 'make'
+ifndef type
+  # gcc 4
+  ifeq ($(shell gcc -dumpversion | cut -d. -f 1), 4)
+    LDFLAGS += -Wl,--gc-sections
+    CPPFLAGS += -mtune=generic
+
+  # gcc 3
+  else
+    CPPFLAGS += -march=$(shell uname -m)
+  endif
+endif
+
+################################################################################
+# The following section defines compile flags for linux final 
+# results.
+#-------------------------------------------------------------------------------
+# Linux
+ifneq (,$(findstring linux,$(shell gcc -dumpmachine)))
+	PLATFORM := Linux 
+  ifneq (,$(findstring x86_64,$(shell gcc -dumpmachine)))
+    PREFIX ?= $(INSTALL_DIR)/linux-g++-64
+		ARCH := x64
+  else
+    PREFIX ?= $(INSTALL_DIR)/linux-g++
+		ARCH := x86
+  endif
+
+  SUFFIX := lib
+  LDFLAGS += -L$(PREFIX)/$(SUFFIX)
+
+  LIBS += -lpthread
+
+  CPPFLAGS += -fPIC 
+
+################################################################################
+# The following section defines compile flags for windows final 
+# results.
+#-------------------------------------------------------------------------------
+# Windows
+else
+	PLATFORM := Windows
+  ifneq (,$(findstring x86_64,$(shell gcc -dumpmachine)))
+    PREFIX ?= $(INSTALL_DIR)/win32-g++
+  else
+    PREFIX ?= $(INSTALL_DIR)/win32-g++
+  endif
+
+  SUFFIX := cygwin/bin
+
+  ifeq ($(compiler),mingw64)
+    SUFFIX := mingw64/bin
+  endif
+
+  ifeq ($(compiler),mingw32)
+    SUFFIX := mingw32/bin
+  endif
+
+  LDFLAGS += -L$(PREFIX)/$(SUFFIX) -lpthread
+  #WIN_LDFLAGS := -no-undefined
+
+  
+  PWIZ_LIBS := $(PWIZ_LIBS_WINDOWS)
+  PWIZ_OPTIONS := --without-mz5
+
+  # Temporarly disable pwiz on windows
+  #INCLUDE_PWIZ := 0
+  #PWIZ_USE :=
+  #PWIZ_LIBS :=
+
+endif
+
+################################################################################
+# The following section sets variables to be used later if PWiz is NOT to be used.
+#-------------------------------------------------------------------------------
+# PWiz
+ifeq ($(pwiz),no)
+  INCLUDE_PWIZ := 0
+  PWIZ_USE :=
+  PWIZ_LIBS :=
+endif
+
+################################################################################
+# The following section sets variables to be used later if GenoMS is NOT to be used.
+#-------------------------------------------------------------------------------
+# GenoMS
+ifeq ($(genoms),yes)
+  INCLUDE_GENOMS := 1
+  GENOMS_USE := GenoMS
+endif
+
+################################################################################
+# Compiler
+################################################################################
+# The following section defines compile and link flags if mingw64 or 32 are to
+# be used instead of CygWin.
+################################################################################
+#compiler=mingw64
+ifeq ($(compiler),mingw64)
+  CC := x86_64-w64-mingw32-gcc.exe
+  CXX := x86_64-w64-mingw32-g++.exe
+  AR := /usr/x86_64-w64-mingw32/bin/ar.exe
+  RANLIB := /usr/x86_64-w64-mingw32/bin/ranlib.exe
+  STRIP := /usr/x86_64-w64-mingw32/bin/strip.exe
+  LDFLAGS += -Lc:\mingws\lib -static
+  LIBS += -lws2_32
+  MINGW_SPECIFIC_FLAGS := --build=mingw32 --enable-netaccessor-socket
+  export AR CC CXX RANLIB STRIP LIBS LDFLAGS
+  PWIZ_LIBS :=
+  INCLUDE_PWIZ := 0
+  PWIZ_USE :=
+  PWIZ_OPTIONS := --toolset=mingw --toolset-root=/usr/x86_64-w64-mingw32/bin/
+ 	PLATFORM := MinGW 64
+ 	ARCH := 
+endif
+
+#compiler=mingw32
+ifeq ($(compiler),mingw32)
+  CC := i686-w64-mingw32-gcc.exe
+  CXX := i686-w64-mingw32-g++.exe
+  AR := /usr/i686-pc-mingw32/bin/ar.exe
+  RANLIB := /usr/i686-pc-mingw32/bin/ranlib.exe
+  STRIP := /usr/i686-pc-mingw32/bin/strip.exe
+  LDFLAGS += -Lc:\mingws\lib -static
+  LIBS += -lws2_32
+  MINGW_SPECIFIC_FLAGS := --build=mingw32 --enable-netaccessor-socket
+  export AR CC CXX RANLIB STRIP LIBS LDFLAGS
+  PWIZ_LIBS :=
+  INCLUDE_PWIZ := 0
+  PWIZ_USE :=
+ 	PLATFORM := MinGW 32
+ 	ARCH := 
+endif
+
+
+################################################################################
+# This section adds the parameters needed to be passed into the compilation 
+# process for conditional compilation
+#
+
+CPPFLAGS += -DINCLUDE_PWIZ=$(INCLUDE_PWIZ) -DINCLUDE_GENOMS=$(INCLUDE_GENOMS)
+
+
+################################################################################
+# Display conplie options
+################################################################################
+ifdef MASTER
+
+$(info )
+$(info **************************************************************)
+$(info ******************** SPS Building process ********************)
+$(info * )
+$(info * Options:)
+$(info * )
+$(info * C compiler is $(CC))
+$(info * C++ compiler is $(CXX))
+$(info * Library builder is $(AR))
+$(info * Ranlib is $(RANLIB))
+# $(info * Compile flags are $(CPPFLAGS))
+# $(info * Link flags are $(LDFLAGS))
+$(info * Using GenoMS? : $(INCLUDE_GENOMS))
+$(info * Using Proteowizard? : $(INCLUDE_PWIZ))
+$(info * )
+$(info * Platform: $(PLATFORM) $(ARCH))
+ifeq ($(type),debug)
+  $(info * Building DEBUG binaries)
+endif
+ifeq ($(build),static)
+  $(info * STATIC linkage)
+else
+  $(info * DYNAMIC linkage)
+endif
+$(info **************************************************************)
+
+endif
+
+################################################################################
+# Variables to be passed to other Makefiles
+################################################################################
+# The following section defines the default goal as 'all'
+
+.DEFAULT_GOAL := all
+################################################################################

@@ -1,0 +1,16 @@
+################################################################################
+# Compile rules - general
+################################################################################
+#
+# Contains the general compile rules.
+# These specific rules define, at the lower level, how .cpp files should be 
+# processed.
+#
+
+.cpp.o:
+	$(CXX) $(CPPFLAGS) $< -c -o $@  $(MAKE_OUTPUT)
+
+.o.o:
+	$(CXX) $(CPPFLAGS) $<   $(MAKE_OUTPUT)
+
+################################################################################
